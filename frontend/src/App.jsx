@@ -406,6 +406,10 @@ export default function App() {
                   <h3>{getCategoryEmoji(inc.categoria)} {inc.categoria}</h3>
                   <p>📍 {inc.direccion}</p>
                   <p className="p-desc">{inc.descripcion}</p>
+
+                  <div className="p-meta">
+                    <span>👤 {inc.usuario || 'Anónimo'}</span>
+                    <span>🏷️ {(inc.estado || 'reportado').replace('_',' ')}</span>
                   </div>
 
                   {inc.multimedia && inc.multimedia.length > 0 && (
