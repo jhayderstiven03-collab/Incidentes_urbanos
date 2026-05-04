@@ -32,7 +32,7 @@ class IncidenteCreate(BaseModel):
     prioridad: str
     usuario_id: Optional[str] = "anonimo"
     usuario_nombre: str
-    multimedia: Optional[List[MultimediaItem]] = Field(default_factory=list, max_items=3)
+    multimedia: Optional[List[MultimediaItem]] = Field(default_factory=list, max_length=3)
     entidad_asignada: Optional[str] = None
 
 

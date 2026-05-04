@@ -7,10 +7,40 @@ on:
     branches: [main]
 
 jobs:
+  lint-backend:
+    name: 🧹 Lint Backend (Ruff)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Instalar Ruff
+        run: pip install ruff
+      - name: Correr Ruff
+        working-directory: ./backend
+        run: ruff check .
+
+  security-scan:
+    name: 🛡️ Security Scan (Bandit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Instalar Bandit
+        run: pip install bandit
+      - name: Correr Bandit
+        working-directory: ./backend
+        run: bandit -r . -ll
+
   test-backend:
     name: 🧪 Tests Backend (Python)
     runs-on: ubuntu-latest
-
+    needs: [lint-backend, security-scan]
     steps:
       - name: Checkout código
         uses: actions/checkout@v4
@@ -22,20 +52,51 @@ jobs:
 
       - name: Instalar dependencias
         working-directory: ./backend
-        run: pip install -r requirements.txt
+        run: |
+          pip install -r requirements.txt
+          pip install pytest-cov
 
       - name: Correr pruebas con pytest
         working-directory: ./backend
-        run: pytest tests/ -v
+        run: |
+          pytest tests/ -v --cov=. --cov-report=xml --cov-report=term-missing
+
+      - name: Subir reporte de cobertura
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage
+          path: backend/coverage.xml
+
+  test-frontend:
+    name: 💅 Lint & Build Frontend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: './frontend/package-lock.json'
+      - name: Instalar dependencias
+        working-directory: ./frontend
+        run: npm ci
+      - name: Correr Lint
+        working-directory: ./frontend
+        run: npm run lint
+      - name: Correr Build
+        working-directory: ./frontend
+        run: npm run build
 
   build-docker:
     name: 🐳 Build Docker Images
     runs-on: ubuntu-latest
-    needs: test-backend
-
+    needs: [test-backend, test-frontend]
     steps:
       - name: Checkout código
         uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       - name: Build backend image
         run: docker build -t urban-incidents-backend ./backend
@@ -55,13 +116,10 @@ jobs:
       - name: Levantar servicios con docker-compose
         run: docker compose up -d
 
-      - name: Esperar que backend esté listo
+      - name: Esperar que backend esté listo (Healthcheck mejorado)
         run: |
           echo "Esperando backend..."
-          for i in {1..15}; do
-            curl -sf http://localhost:8080/ && break
-            sleep 3
-          done
+          curl --retry 10 --retry-connrefused --retry-delay 5 -sf http://localhost:8080/ || exit 1
 
       - name: Verificar endpoint raíz
         run: curl -sf http://localhost:8080/ | grep "ok"
