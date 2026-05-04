@@ -1,86 +1,82 @@
 # 🏙️ Urban Incidents - Plataforma de Gestión Urbana (Pamplona)
 
-**Urban Incidents** es una solución tecnológica híbrida diseñada para la ciudad de Pamplona, Colombia. Permite a los ciudadanos reportar incidentes urbanos (vías, alumbrado, residuos, etc.) y a las autoridades gestionar, validar y resolver dichos reportes en tiempo real a través de una interfaz moderna basada en mapas.
+**Urban Incidents** es una solución tecnológica de nivel profesional diseñada para el municipio de Pamplona, Colombia. La plataforma permite una colaboración híbrida entre ciudadanos y autoridades para el reporte y gestión de incidentes urbanos en tiempo real.
 
-![UI Preview](https://img.shields.io/badge/UI-Fullscreen_Map-blue)
+![CI Status](https://img.shields.io/github/actions/workflow/status/jhayderstiven03-collab/Incidentes_urbanos/ci.yml?branch=main&label=CI%20Pipeline)
 ![DB](https://img.shields.io/badge/Database-DynamoDB_Cloud-orange)
 ![Backend](https://img.shields.io/badge/Backend-FastAPI-green)
+![Frontend](https://img.shields.io/badge/Frontend-React_19-blue)
 
 ---
 
 ## ✨ Características Principales
 
-### 🗺️ Experiencia de Usuario (UX)
-- **Mapa a Pantalla Completa:** Interfaz centrada en la ubicación para una navegación intuitiva.
-- **Geocodificación Inteligente:** Autocompletado de dirección mediante clic derecho en el mapa.
-- **Restricción Geográfica:** Operaciones limitadas exclusivamente al municipio de Pamplona.
-- **Mapa de Calor:** Visualización de zonas críticas mediante intensidades de incidentes.
+### 🗺️ Experiencia Geográfica Premium
+- **Mapa Interactivo:** Interfaz de pantalla completa basada en Leaflet con diseño Glassmorphism.
+- **Geocodificación Automática:** Los ciudadanos pueden seleccionar la ubicación exacta en el mapa y obtener la dirección automáticamente.
+- **Zonificación Crítica:** Mapa de calor (Heatmap) integrado para identificar áreas con mayor concentración de reportes.
+- **Restricción Territorial:** Operaciones geocercadas estrictamente al perímetro urbano de Pamplona.
 
-### 👥 Modelo Híbrido Ciudadano-Institucional
-- **Autenticación Obligatoria:** Registro con validación de teléfono y dirección residencial.
-- **Roles de Usuario:** Ciudadanos (reportan), Operadores (gestionan), Supervisores y Administradores (auditan).
-- **Gestión de Evidencias:** Soporte para hasta 3 imágenes por reporte con **compresión automática** en el cliente para optimizar el almacenamiento.
-
-### 🏛️ Panel Administrativo Avanzado
-- **Flujo de Estados:** Trazabilidad completa desde `reportado` hasta `resuelto` o `cerrado`.
-- **Auditoría:** Registro detallado de todas las acciones críticas realizadas por funcionarios.
-- **Asignación de Entidades:** Capacidad de delegar incidentes a secretarías responsables.
+### 👥 Gestión Institucional y Ciudadana
+- **Modelo de Roles:** Acceso diferenciado para Ciudadanos, Operadores, Supervisores y Administradores.
+- **Evidencias Multimedia:** Captura y carga de fotos (hasta 3 por reporte) con **compresión inteligente** en el cliente para optimizar costos de almacenamiento.
+- **Trazabilidad Total:** Historial detallado de cambios de estado y auditoría de acciones administrativas.
 
 ---
 
-## 🛠️ Stack Tecnológico
+## 🛠️ Stack Tecnológico Moderno
 
-- **Frontend:** React + Vite, Leaflet (Mapas), Axios, Vanilla CSS (Premium Design).
-- **Backend:** Python + FastAPI, Pydantic (Validación).
-- **Base de Datos:** Amazon DynamoDB (NoSQL de alta disponibilidad).
-- **Despliegue:** Docker & Docker Compose.
-
----
-
-## 🚀 Instalación y Ejecución
-
-### Requisitos Previos
-- Docker y Docker Compose instalados.
-- Archivo `.env` configurado con credenciales de AWS (DynamoDB).
-
-### Pasos para iniciar
-1. Clonar el repositorio:
-   ```bash
-   git clone https://github.com/charlykj/urban-incidents.git
-   ```
-2. Iniciar con Docker Compose:
-   ```bash
-   docker-compose up --build -d
-   ```
-3. Acceder a la plataforma:
-   - **Frontend:** `http://localhost:3000`
-   - **Backend API:** `http://localhost:8080/docs`
+- **Frontend:** React 19 + Vite, Leaflet, Axios, Context API para estado global.
+- **Backend:** Python 3.11 + FastAPI con arquitectura asíncrona y Lifespan Context Manager.
+- **Base de Datos:** Amazon DynamoDB (NoSQL gestionado en la nube).
+- **Código y Calidad:** 
+  - **Linter (Backend):** Ruff (estándares PEP 8).
+  - **Linter (Frontend):** ESLint con reglas de Fast Refresh.
+  - **Seguridad:** Bandit (análisis de vulnerabilidades).
+  - **Pruebas:** Pytest con reportes de cobertura.
 
 ---
 
-## 📂 Estructura del Proyecto
+## 🚀 Pipeline de CI/CD y Despliegue
+
+El proyecto cuenta con un flujo de **Integración y Despliegue Continuo** automatizado mediante GitHub Actions:
+
+1.  **Validación:** Cada commit es analizado por Ruff, Bandit y ESLint.
+2.  **Pruebas:** Ejecución de tests unitarios y de integración con reportes de cobertura (Codecov).
+3.  **Build:** Generación de imágenes Docker para servicios backend y frontend.
+4.  **Despliegue:** 
+    - **Backend:** Web Service en **Render** (Dockerizado).
+    - **Frontend:** Static Site en **Render** (Optimizado para CDN).
+
+---
+
+## 📂 Configuración del Entorno
+
+Para producción, las variables se gestionan mediante **GitHub Secrets**:
+- `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY`: Credenciales de DynamoDB Cloud.
+- `AWS_REGION`: Región de la base de datos.
+- `JWT_SECRET`: Clave secreta para la firma de tokens de seguridad.
+- `RENDER_DEPLOY_HOOK_*`: Webhooks para automatizar el despliegue.
+
+---
+
+## 🖥️ Estructura del Proyecto
 
 ```text
+├── .github/workflows/ # Pipeline de CI/CD automatizado
 ├── backend/
-│   ├── routes/        # Endpoints de incidentes, auth y admin
-│   ├── models/        # Esquemas de datos Pydantic
-│   ├── db/            # Conexión y utilidades de DynamoDB
-│   └── main.py        # Punto de entrada FastAPI
+│   ├── db/            # Lógica de DynamoDB Cloud
+│   ├── models/        # Esquemas Pydantic V2
+│   ├── routes/        # Controladores (Auth, Incidents, Admin, Analytics)
+│   └── tests/         # Suite de pruebas Pytest
 ├── frontend/
 │   ├── src/
-│   │   ├── App.jsx    # Interfaz principal y mapa
-│   │   ├── AdminPanel # Gestión institucional
-│   │   └── useAuth    # Estado global de sesión
-│   └── nginx.conf     # Configuración del servidor de producción
-└── docker-compose.yml
+│   │   ├── AuthContext.js # Gestión de estado de sesión (HMR ready)
+│   │   ├── AdminPanel.jsx # Interfaz institucional
+│   │   └── App.jsx        # Dashboard principal y mapas
+│   └── vite.config.js
+└── docker-compose.yml # Orquestación local para desarrollo
 ```
 
 ---
-
-## 🛡️ Seguridad y Optimización
-- **JWT:** Autenticación basada en tokens para rutas protegidas.
-- **Compresión de Imágenes:** Las imágenes se procesan en el navegador (max 800px) para cumplir con el límite de 400KB de DynamoDB.
-- **CORS:** Configurado para permitir comunicación segura entre contenedores.
-
----
-*Desarrollado para la asignatura de Base de Datos II - 2024*
+*Desarrollado para la asignatura de Base de Datos II - 2026*

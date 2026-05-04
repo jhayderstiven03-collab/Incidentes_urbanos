@@ -11,7 +11,7 @@ from passlib.context import CryptContext
 from db.dynamo import get_table
 from models.incident import UsuarioRegister, ROLES_VALIDOS
 
-SECRET_KEY = os.getenv("JWT_SECRET", "urban-incidents-secret-2024-change-in-prod")
+SECRET_KEY = os.getenv("JWT_SECRET", "urban-incidents-secret-2026-change-in-prod")
 ALGORITHM = "HS256"
 TOKEN_EXPIRE_HOURS = 24
 

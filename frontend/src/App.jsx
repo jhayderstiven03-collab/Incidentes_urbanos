@@ -462,7 +462,7 @@ export default function App() {
         </div>
 
         <footer className="sidebar-footer">
-          <p>© 2024 Pamplona Digital</p>
+          <p>© 2026 Pamplona Digital</p>
         </footer>
       </aside>
     </div>
