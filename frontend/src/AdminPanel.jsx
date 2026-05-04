@@ -12,6 +12,18 @@ const STATUS_COLOR = {
   en_proceso: '#06b6d4', resuelto: '#10b981', cerrado: '#64748b', rechazado: '#ef4444'
 }
 
+const CAT_COLORS = {
+  alumbrado: '#f59e0b', vias: '#3b82f6', residuos: '#10b981', 
+  seguridad: '#ef4444', infraestructura: '#8b5cf6', otros: '#64748b'
+}
+
+const ENTIDADES = [
+  "CENS Grupo EPM",
+  "Alcaldía de Pamplona",
+  "EMPOPAMPLONA S.A. E.S.P.",
+  "organismos de servicio públicos"
+]
+
 function EstadoBadge({ estado }) {
   return (
     <span className="estado-badge" style={{ background: STATUS_COLOR[estado] || '#64748b' }}>
@@ -20,11 +32,41 @@ function EstadoBadge({ estado }) {
   )
 }
 
+function PieChart({ data }) {
+  let cumulativePercent = 0
+  
+  const slices = data.map(slice => {
+    const start = cumulativePercent
+    cumulativePercent += slice.percent
+    return `${slice.color} ${start}% ${cumulativePercent}%`
+  }).join(', ')
+
+  return (
+    <div className="pie-wrapper">
+      <div className="pie-circle" style={{ background: `conic-gradient(${slices})` }}>
+        <div className="pie-hole" />
+      </div>
+      <div className="pie-legend">
+        {data.map(slice => (
+          <div key={slice.label} className="legend-item">
+            <span className="legend-dot" style={{ background: slice.color }} />
+            <span className="legend-label">{slice.label}</span>
+            <span className="legend-pct">{slice.percent.toFixed(1)}%</span>
+            <span className="legend-val">{slice.count}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 function IncidenteDetailModal({ inc, token, onClose, onRefresh, showToast }) {
   const [nuevoEstado, setNuevoEstado] = useState('')
   const [observacion, setObservacion] = useState('')
   const [entidad, setEntidad] = useState(inc.entidad_asignada || '')
+  const [isManual, setIsManual] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [zoomImage, setZoomImage] = useState(null)
   const headers = { Authorization: `Bearer ${token}` }
 
   const cambiarEstado = async () => {
@@ -50,11 +92,11 @@ function IncidenteDetailModal({ inc, token, onClose, onRefresh, showToast }) {
     setLoading(true)
     try {
       await axios.put(`${API}/admin/incidents/${inc.incidente_id}/assign`,
-        null, { headers, params: { entidad } })
+        { entidad, ciudad_zona: inc.CiudadZona, fecha_id: inc.FechaID }, { headers })
       showToast(`✅ Asignado a "${entidad}"`)
       onRefresh(); onClose()
     } catch (e) {
-      showToast('❌ Error al asignar', 'error')
+      showToast(`❌ ${e.response?.data?.detail || 'Error al asignar'}`, 'error')
     } finally { setLoading(false) }
   }
 
@@ -103,10 +145,19 @@ function IncidenteDetailModal({ inc, token, onClose, onRefresh, showToast }) {
               <h4>📸 Evidencias</h4>
               <div className="media-grid">
                 {inc.multimedia.map((m, i) => (
-                  <a key={i} href={m.url} target="_blank" rel="noreferrer" className="media-thumb">
+                  <div key={i} className="media-thumb" onClick={() => setZoomImage(m.url)}>
                     <img src={m.url} alt={`Evidencia ${i+1}`} onError={e => e.target.style.display='none'} />
-                  </a>
+                  </div>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {zoomImage && (
+            <div className="lightbox-overlay" onClick={() => setZoomImage(null)}>
+              <div className="lightbox-content" onClick={e => e.stopPropagation()}>
+                <button className="lightbox-close" onClick={() => setZoomImage(null)}>✕</button>
+                <img src={zoomImage} alt="Zoom" className="img-full" />
               </div>
             </div>
           )}
@@ -152,14 +203,39 @@ function IncidenteDetailModal({ inc, token, onClose, onRefresh, showToast }) {
             </div>
 
             <div className="action-group">
-              <label>Asignar Entidad</label>
+              <label>Asignar Entidad Responsable</label>
               <div className="action-row">
-                <input value={entidad} onChange={e => setEntidad(e.target.value)}
-                  placeholder="Ej: Secretaría de Infraestructura" />
-                <button onClick={asignar} disabled={loading} className="btn-action">
+                <select 
+                  value={isManual ? 'otros' : entidad} 
+                  onChange={e => {
+                    if (e.target.value === 'otros') {
+                      setIsManual(true)
+                      setEntidad('')
+                    } else {
+                      setIsManual(false)
+                      setEntidad(e.target.value)
+                    }
+                  }}
+                >
+                  <option value="">Seleccionar entidad...</option>
+                  {ENTIDADES.map(ent => (
+                    <option key={ent} value={ent}>{ent}</option>
+                  ))}
+                  <option value="otros">Otra (Manual)</option>
+                </select>
+                <button onClick={asignar} disabled={!entidad || loading} className="btn-action">
                   Asignar
                 </button>
               </div>
+              {isManual && (
+                <input 
+                  placeholder="Escribe la entidad..." 
+                  value={entidad}
+                  onChange={e => setEntidad(e.target.value)}
+                  style={{marginTop:'8px'}}
+                  autoFocus
+                />
+              )}
             </div>
 
             <button onClick={eliminar} disabled={loading} className="btn-danger">
@@ -229,6 +305,11 @@ export default function AdminPanel({ token, userRol, onBack }) {
           {['supervisor','admin'].includes(userRol) && (
             <button className={view === 'audit' ? 'active' : ''} onClick={() => setView('audit')}>
               🔍 Auditoría
+            </button>
+          )}
+          {userRol === 'admin' && (
+            <button className={view === 'reportes' ? 'active' : ''} onClick={() => setView('reportes')}>
+              📊 Reportes
             </button>
           )}
         </nav>
@@ -328,6 +409,73 @@ export default function AdminPanel({ token, userRol, onBack }) {
                 </div>
               ))}
               {auditLog.length === 0 && <p className="no-results">No hay registros de auditoría.</p>}
+            </div>
+          </div>
+        )}
+
+        {view === 'reportes' && (
+          <div className="reports-view">
+            <h3>📊 Resumen Estadístico de Incidentes</h3>
+            
+            <div className="stats-grid">
+              <div className="stat-card">
+                <span className="stat-label">Total Reportes</span>
+                <span className="stat-value">{incidentes.length}</span>
+              </div>
+              <div className="stat-card">
+                <span className="stat-label">Resueltos</span>
+                <span className="stat-value">{incidentes.filter(i => i.estado === 'resuelto').length}</span>
+              </div>
+              <div className="stat-card">
+                <span className="stat-label">En Proceso</span>
+                <span className="stat-value">{incidentes.filter(i => i.estado === 'en_proceso').length}</span>
+              </div>
+              <div className="stat-card">
+                <span className="stat-label">Pendientes</span>
+                <span className="stat-value">{incidentes.filter(i => i.estado === 'reportado').length}</span>
+              </div>
+            </div>
+
+            <div className="charts-container">
+              <div className="chart-box">
+                <h4>Distribución por Categoría</h4>
+                <PieChart data={CATEGORIAS.map(cat => ({
+                  label: cat,
+                  count: incidentes.filter(i => i.categoria === cat).length,
+                  percent: incidentes.length ? (incidentes.filter(i => i.categoria === cat).length / incidentes.length * 100) : 0,
+                  color: CAT_COLORS[cat]
+                })).filter(s => s.count > 0)} />
+              </div>
+
+              <div className="chart-box">
+                <h4>Distribución por Estado</h4>
+                <div className="classic-bar-chart">
+                  <div className="y-axis">
+                    {[5,4,3,2,1,0].map(n => (
+                      <div key={n} className="y-mark"><span>{n}</span></div>
+                    ))}
+                  </div>
+                  <div className="chart-area">
+                    <div className="bars-container">
+                      {ESTADOS.map(est => {
+                        const count = incidentes.filter(i => i.estado === est).length;
+                        const max = Math.max(...ESTADOS.map(e => incidentes.filter(i => i.estado === e).length), 5);
+                        const height = (count / max * 100);
+                        return (
+                          <div key={est} className="bar-v-col">
+                            <div className="bar-v-track">
+                              <div className="bar-v-fill" style={{ height: `${height}%`, background: STATUS_COLOR[est] }}>
+                                <div className="bar-v-tooltip">{count}</div>
+                              </div>
+                            </div>
+                            <div className="bar-v-label-bot">{est.replace('_',' ')}</div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         )}

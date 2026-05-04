@@ -85,6 +85,14 @@ def verificar_duplicados(lat: float, lng: float, categoria: str):
     return {"duplicados": _buscar_duplicados(lat, lng, categoria)}
 
 
+ENTIDADES_MAP = {
+    "alumbrado": "CENS Grupo EPM",
+    "vias": "Alcaldía de Pamplona",
+    "residuos": "EMPOPAMPLONA S.A. E.S.P.",
+    "seguridad": "organismos de servicio públicos",
+    "infraestructura": "Alcaldía de Pamplona",
+}
+
 @router.post("/", status_code=201)
 def crear_incidente(
     data: IncidenteCreate,
@@ -106,6 +114,9 @@ def crear_incidente(
     usuario_id = current_user["usuario_id"]
     usuario_nombre = current_user["nombre"]
 
+    entidad_auto = ENTIDADES_MAP.get(data.categoria, "")
+    entidad_final = data.entidad_asignada or entidad_auto
+
     estado_inicial = "reportado"
     now = datetime.utcnow().isoformat()
 
@@ -123,7 +134,7 @@ def crear_incidente(
         "fecha_creacion":     now,
         "usuario_id":         usuario_id,
         "usuario":            usuario_nombre,
-        "entidad_asignada":   data.entidad_asignada or "",
+        "entidad_asignada":   entidad_final,
         "confirmaciones":     0,
         "confirmado_por":     [],
         "multimedia":         [m.dict() for m in data.multimedia[:3]] if data.multimedia else [],

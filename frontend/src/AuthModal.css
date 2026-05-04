@@ -1,4 +1,4 @@
-/* AuthModal.css */
+/* AuthModal.css - Responsive Update */
 .auth-overlay {
   position: fixed; inset: 0;
   background: rgba(15,23,42,0.6);
@@ -6,6 +6,7 @@
   z-index: 9000;
   display: flex; align-items: center; justify-content: center;
   animation: fadeIn .25s ease;
+  padding: 1rem;
 }
 .auth-modal {
   background: #fff;
@@ -71,3 +72,12 @@
 .role-chip.op  { background: #eff6ff; color: #1d4ed8; }
 .role-chip.sup { background: #f0fdf4; color: #15803d; }
 .role-chip.adm { background: #faf5ff; color: #7c3aed; }
+
+@media (max-width: 480px) {
+  .auth-modal {
+    padding: 2rem 1.5rem;
+    border-radius: 16px;
+  }
+  .auth-logo { font-size: 1.2rem; }
+  .auth-modal h2 { font-size: 1.2rem; }
+}

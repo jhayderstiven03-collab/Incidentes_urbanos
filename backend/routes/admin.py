@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, Depends, Query
+from pydantic import BaseModel
 from typing import Optional
 from boto3.dynamodb.conditions import Key
 
@@ -103,20 +104,28 @@ def fusionar_incidentes(
     return {"mensaje": "Incidentes fusionados correctamente"}
 
 
+class AssignRequest(BaseModel):
+    entidad: str
+    ciudad_zona: str
+    fecha_id: str
+
 @router.put("/incidents/{incidente_id}/assign")
 def asignar_responsable(
     incidente_id: str,
-    entidad: str,
+    data: AssignRequest,
     current_user=Depends(require_role("operador", "supervisor", "admin")),
 ):
-    from routes.incidents import _get_incidente_by_id
-    item = _get_incidente_by_id(incidente_id)
+    entidad = data.entidad
+    tabla = get_table()
+
+    # Usar la clave primaria directamente en lugar del GSI
+    res = tabla.get_item(Key={"CiudadZona": data.ciudad_zona, "FechaID": data.fecha_id})
+    item = res.get("Item")
     if not item:
         raise HTTPException(404, "Incidente no encontrado")
 
-    tabla = get_table()
     tabla.update_item(
-        Key={"CiudadZona": item["CiudadZona"], "FechaID": item["FechaID"]},
+        Key={"CiudadZona": data.ciudad_zona, "FechaID": data.fecha_id},
         UpdateExpression="SET entidad_asignada = :e",
         ExpressionAttributeValues={":e": entidad},
     )
