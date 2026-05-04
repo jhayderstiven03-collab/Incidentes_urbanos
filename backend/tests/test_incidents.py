@@ -48,7 +48,7 @@ def test_crear_incidente():
         token = create_token({"usuario_id": "u1", "nombre": "Juan", "rol": "ciudadano"})
         response = client.post("/incidents/", json=payload, headers={"Authorization": f"Bearer {token}"})
         assert response.status_code == 201
-        assert "incidente_id" in response.json()
+        assert "id" in response.json()
 
 
 def test_actualizar_incidente():
