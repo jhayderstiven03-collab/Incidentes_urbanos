@@ -11,7 +11,7 @@ mock_table.put_item.return_value = {}
 mock_table.update_item.return_value = {}
 mock_table.delete_item.return_value = {}
 
-with patch("db.dynamo.create_table_if_not_exists", return_value=None), \
+with patch("db.dynamo.create_all_tables", return_value=None), \
      patch("db.dynamo.get_table", return_value=mock_table):
     from main import app
 
