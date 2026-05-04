@@ -36,7 +36,7 @@ app.include_router(analytics_router)
 app.include_router(admin_router)
 
 
-@app.get("/")
+@app.api_route("/", methods=["GET", "HEAD"])
 def root():
     return {
         "status": "ok",
