@@ -321,6 +321,7 @@ export default function App() {
   const [selectedLocation, setSelectedLocation] = useState(null)
   const [isLoading, setIsLoading] = useState(false)
   const [showAdmin, setShowAdmin] = useState(false)
+  const [selectedImage, setSelectedImage] = useState(null)
   const [toast, setToast] = useState({ msg: '', tipo: '' })
 
   const cargarIncidentes = useCallback(async () => {
@@ -405,10 +406,21 @@ export default function App() {
                   <h3>{getCategoryEmoji(inc.categoria)} {inc.categoria}</h3>
                   <p>📍 {inc.direccion}</p>
                   <p className="p-desc">{inc.descripcion}</p>
-                  <div className="p-meta">
-                    <span>👤 {inc.usuario || 'Anónimo'}</span>
-                    <span>🏷️ {(inc.estado || 'reportado').replace('_',' ')}</span>
                   </div>
+
+                  {inc.multimedia && inc.multimedia.length > 0 && (
+                    <div className="popup-multimedia">
+                      {inc.multimedia.map((item, idx) => (
+                        <img 
+                          key={idx} 
+                          src={item.url} 
+                          alt="Evidencia" 
+                          className="popup-thumb" 
+                          onClick={() => setSelectedImage(item.url)}
+                        />
+                      ))}
+                    </div>
+                  )}
                 </div>
               </Popup>
             </Marker>
@@ -465,6 +477,16 @@ export default function App() {
           <p>© 2026 Pamplona Digital</p>
         </footer>
       </aside>
+
+      {/* ─── Modal de Imagen Grande ─── */}
+      {selectedImage && (
+        <div className="img-modal-overlay" onClick={() => setSelectedImage(null)}>
+          <div className="img-modal-content" onClick={e => e.stopPropagation()}>
+            <button className="img-modal-close" onClick={() => setSelectedImage(null)}>×</button>
+            <img src={selectedImage} alt="Evidencia ampliada" className="img-modal-large" />
+          </div>
+        </div>
+      )}
     </div>
   )
 }

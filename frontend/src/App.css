@@ -428,3 +428,58 @@
   .floating-filters { top: 10px; left: 10px; }
   .main-map-container { height: 40vh; }
 }
+
+/* ─── Multimedia & Modal Styles ─── */
+.popup-multimedia {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255,255,255,0.1);
+  overflow-x: auto;
+}
+.popup-thumb {
+  width: 60px;
+  height: 60px;
+  border-radius: 8px;
+  object-fit: cover;
+  cursor: pointer;
+  border: 1px solid rgba(255,255,255,0.1);
+  transition: transform 0.2s, border-color 0.2s;
+}
+.popup-thumb:hover {
+  transform: scale(1.05);
+  border-color: var(--primary);
+}
+
+.img-modal-overlay {
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.9);
+  backdrop-filter: blur(10px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.3s ease;
+}
+.img-modal-content {
+  position: relative;
+  max-width: 90%;
+  max-height: 90%;
+}
+.img-modal-large {
+  max-width: 100%;
+  max-height: 90vh;
+  border-radius: 12px;
+  box-shadow: 0 0 50px rgba(0,0,0,0.5);
+  object-fit: contain;
+}
+.img-modal-close {
+  position: absolute;
+  top: -40px; right: 0;
+  background: none; border: none;
+  color: white; font-size: 2rem;
+  cursor: pointer;
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
