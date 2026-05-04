@@ -8,6 +8,7 @@ class IncidenteCreate(BaseModel):
     zona: str
     categoria: str
     descripcion: str
+    direccion: str
     latitud: float
     longitud: float
     prioridad: str
@@ -26,6 +27,7 @@ class IncidenteResponse(BaseModel):
     FechaID: str
     categoria: str
     descripcion: str
+    direccion: str
     latitud: float
     longitud: float
     prioridad: str

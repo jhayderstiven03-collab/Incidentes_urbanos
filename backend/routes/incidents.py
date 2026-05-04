@@ -19,6 +19,7 @@ def crear_incidente(data: IncidenteCreate):
         "incidente_id":     uid,
         "categoria":        data.categoria,
         "descripcion":      data.descripcion,
+        "direccion":        data.direccion,
         "latitud":          str(data.latitud),
         "longitud":         str(data.longitud),
         "prioridad":        data.prioridad,

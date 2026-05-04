@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from db.dynamo import create_table_if_not_exists
 from routes.incidents import router as incidents_router
+from routes.analytics import router as analytics_router
 
 app = FastAPI(
     title="Urban Incidents API",
@@ -21,6 +22,7 @@ def startup():
     create_table_if_not_exists()
 
 app.include_router(incidents_router)
+app.include_router(analytics_router)
 
 @app.get("/")
 def root():
