@@ -120,6 +120,13 @@ jobs:
       - name: Checkout código
         uses: actions/checkout@v4
 
+      - name: Verificar Secretos de AWS
+        run: |
+          if [ -z "${{ secrets.AWS_ACCESS_KEY_ID }}" ]; then
+            echo "❌ ERROR: AWS_ACCESS_KEY_ID no está configurado en los Secretos de GitHub."
+            exit 1
+          fi
+
       - name: Levantar servicios con docker-compose
         run: docker compose up -d
 
@@ -136,6 +143,10 @@ jobs:
 
       - name: Apagar servicios
         run: docker compose down
+
+      - name: Mostrar logs de backend si falló
+        if: failure()
+        run: docker logs backend
 
   deploy:
     name: 🚀 Deploy to Render
