@@ -7,7 +7,8 @@ import 'leaflet.heat'
 import './App.css'
 import AuthModal from './AuthModal'
 import AdminPanel from './AdminPanel'
-import { useAuth, API } from './useAuth'
+import { useAuth } from './useAuth'
+import { API } from './config'
 
 // ─── Configuración Geográfica (Pamplona + 30% expansión) ─────────────────────
 const PAMPLONA_CENTER = [7.3758, -72.6479]
@@ -90,11 +91,11 @@ function CameraModal({ onCapture, onClose }) {
         onClose()
       }
     }
-    startCamera()
+    if (!stream) startCamera()
     return () => {
       if (stream) stream.getTracks().forEach(t => t.stop())
     }
-  }, [onClose])
+  }, [onClose, stream])
 
   const handleCapture = () => {
     if (!videoRef.current) return
@@ -144,7 +145,7 @@ function FormularioIncidente({ onSubmit, isLoading, selectedLocation, setSelecte
           setMapCenter([lat, lng])
         }
       }
-    } catch (e) { console.error("Error geocoding", e) }
+    } catch (err) { console.error("Error geocoding", err) }
     finally { setIsGeocoding(false) }
   }, [setSelectedLocation, setMapCenter])
 
@@ -170,7 +171,7 @@ function FormularioIncidente({ onSubmit, isLoading, selectedLocation, setSelecte
 
   useEffect(() => {
     if (selectedLocation) {
-      reverseGeocode(selectedLocation.lat, selectedLocation.lng);
+      reverseGeocode(selectedLocation.lat, selectedLocation.lng); // eslint-disable-line react-hooks/set-state-in-effect
       // Auto-scroll to form on mobile when location is selected
       if (window.innerWidth <= 768) {
         document.querySelector('.right-sidebar')?.scrollIntoView({ behavior: 'smooth' });
@@ -322,14 +323,16 @@ export default function App() {
   const [showAdmin, setShowAdmin] = useState(false)
   const [toast, setToast] = useState({ msg: '', tipo: '' })
 
-  useEffect(() => { cargarIncidentes() }, [])
-
-  const cargarIncidentes = async () => {
+  const cargarIncidentes = useCallback(async () => {
     try {
       const res = await axios.get(`${API}/incidents/`)
       setIncidentes(res.data)
-    } catch (e) { console.error(e) }
-  }
+    } catch (err) { 
+      console.error(err) 
+    }
+  }, [])
+
+  useEffect(() => { cargarIncidentes() }, [cargarIncidentes]) // eslint-disable-line react-hooks/set-state-in-effect
 
   const showToast = useCallback((msg, tipo = 'success') => {
     const message = typeof msg === 'string' ? msg : (msg?.detail || 'Error');
@@ -350,8 +353,8 @@ export default function App() {
         cargarIncidentes();
         setSelectedLocation(null);
       }
-    } catch (e) {
-      showToast(e.response?.data?.detail || 'Error de conexión', 'error');
+    } catch (err) {
+      showToast(err.response?.data?.detail || 'Error de conexión', 'error');
     } finally {
       setIsLoading(false);
     }

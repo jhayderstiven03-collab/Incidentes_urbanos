@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useAuth } from './useAuth'
 import './AuthModal.css'
 
-export default function AuthModal({ onClose, onSuccess }) {
+export default function AuthModal({ onSuccess }) {
   const [mode, setMode] = useState('login') // 'login' | 'register'
   const [form, setForm] = useState({ nombre: '', email: '', password: '', telefono: '', direccion: '' })
   const [error, setError] = useState('')

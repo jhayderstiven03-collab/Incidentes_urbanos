@@ -1,27 +1,17 @@
-import React, { useState, useCallback, createContext, useContext, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import axios from 'axios';
-
-const API = import.meta.env.VITE_API_URL || 'http://localhost:8080';
-
-const AuthContext = createContext(null);
-
-export { API };
+import { API } from './config';
+import { AuthContext } from './AuthContext';
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const savedUser = localStorage.getItem('ui_user');
-    if (savedUser) {
-      try {
-        setUser(JSON.parse(savedUser));
-      } catch (e) {
-        console.error("Error parsing saved user", e);
-      }
+  const [user, setUser] = useState(() => {
+    try {
+      const saved = localStorage.getItem('ui_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
     }
-    setLoading(false);
-  }, []);
+  });
 
   const login = useCallback(async (email, password) => {
     const res = await axios.post(`${API}/auth/login`, { email, password });
@@ -56,7 +46,7 @@ export function AuthProvider({ children }) {
     register,
     logout,
     authHeader,
-    loading
+    loading: false
   };
 
   return (
@@ -64,12 +54,4 @@ export function AuthProvider({ children }) {
       {children}
     </AuthContext.Provider>
   );
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth debe usarse dentro de AuthProvider');
-  }
-  return context;
 }

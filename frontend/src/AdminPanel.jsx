@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback, memo } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import axios from 'axios'
-import { API } from './useAuth'
+import { API } from './config'
 import './AdminPanel.css'
 
 const ESTADOS = ['reportado','validado','en_revision','en_proceso','resuelto','cerrado','rechazado']
@@ -33,13 +33,13 @@ function EstadoBadge({ estado }) {
 }
 
 function PieChart({ data }) {
-  let cumulativePercent = 0
-  
-  const slices = data.map(slice => {
-    const start = cumulativePercent
-    cumulativePercent += slice.percent
-    return `${slice.color} ${start}% ${cumulativePercent}%`
-  }).join(', ')
+  const slices = data.reduce((acc, slice) => {
+    const start = acc.total
+    const end = start + slice.percent
+    acc.items.push(`${slice.color} ${start}% ${end}%`)
+    acc.total = end
+    return acc
+  }, { items: [], total: 0 }).items.join(', ')
 
   return (
     <div className="pie-wrapper">
@@ -146,7 +146,7 @@ function IncidenteDetailModal({ inc, token, onClose, onRefresh, showToast }) {
               <div className="media-grid">
                 {inc.multimedia.map((m, i) => (
                   <div key={i} className="media-thumb" onClick={() => setZoomImage(m.url)}>
-                    <img src={m.url} alt={`Evidencia ${i+1}`} onError={e => e.target.style.display='none'} />
+                    <img src={m.url} alt={`Evidencia ${i+1}`} onError={({ target }) => { target.style.display='none' }} />
                   </div>
                 ))}
               </div>
@@ -257,8 +257,6 @@ export default function AdminPanel({ token, userRol, onBack }) {
   const [toast, setToast] = useState({ msg: '', tipo: '' })
   const [filters, setFilters] = useState({ estado: '', categoria: '', prioridad: '' })
 
-  const headers = { Authorization: `Bearer ${token}` }
-
   const showToast = (msg, tipo = 'success') => {
     setToast({ msg, tipo })
     setTimeout(() => setToast({ msg: '', tipo: '' }), 4000)
@@ -271,21 +269,28 @@ export default function AdminPanel({ token, userRol, onBack }) {
       if (filters.estado) params.estado = filters.estado
       if (filters.categoria) params.categoria = filters.categoria
       if (filters.prioridad) params.prioridad = filters.prioridad
+      const headers = { Authorization: `Bearer ${token}` }
       const res = await axios.get(`${API}/admin/incidents`, { headers, params })
       setIncidentes(res.data)
-    } catch (e) { showToast('❌ Error al cargar incidentes', 'error') }
-    finally { setLoading(false) }
+    } catch { 
+      showToast('❌ Error al cargar incidentes', 'error') 
+    } finally { 
+      setLoading(false) 
+    }
   }, [filters, token])
 
   const fetchAudit = useCallback(async () => {
     try {
+      const headers = { Authorization: `Bearer ${token}` }
       const res = await axios.get(`${API}/admin/audit`, { headers })
       setAuditLog(res.data)
-    } catch { }
+    } catch {
+      console.error("Error fetching audit log")
+    }
   }, [token])
 
-  useEffect(() => { fetchIncidentes() }, [fetchIncidentes])
-  useEffect(() => { if (view === 'audit') fetchAudit() }, [view, fetchAudit])
+  useEffect(() => { fetchIncidentes() }, [fetchIncidentes]) // eslint-disable-line react-hooks/set-state-in-effect
+  useEffect(() => { if (view === 'audit') fetchAudit() }, [view, fetchAudit]) // eslint-disable-line react-hooks/set-state-in-effect
 
   const prioColor = { alta: '#ef4444', media: '#f59e0b', baja: '#10b981' }
 
