@@ -38,10 +38,11 @@ def test_crear_incidente():
             "zona": "Norte",
             "categoria": "alumbrado",
             "descripcion": "Poste caído en la calle 5",
+            "direccion": "Calle 5",
             "latitud": 7.119349,
             "longitud": -73.122741,
             "prioridad": "alta",
-            "usuario": "ciudadano01",
+            "usuario_nombre": "ciudadano01",
         }
         response = client.post("/incidents/", json=payload)
         assert response.status_code == 201
@@ -49,17 +50,25 @@ def test_crear_incidente():
 
 
 def test_actualizar_incidente():
+    from auth import create_token
+    token = create_token({"usuario_id": "u1", "nombre": "Admin", "rol": "admin"})
     with patch("routes.incidents.get_table", return_value=mock_table):
-        response = client.put(
-            "/incidents/Bucaramanga%23Norte/2024-01-01T00:00:00%23test-id",
-            json={"estado": "resuelto"},
-        )
-        assert response.status_code == 200
+        with patch("routes.incidents._get_incidente_by_id", return_value={"CiudadZona": "Bucaramanga#Norte", "FechaID": "123", "estado": "reportado"}):
+            response = client.put(
+                "/incidents/test-id/status",
+                json={"nuevo_estado": "resuelto"},
+                headers={"Authorization": f"Bearer {token}"}
+            )
+            assert response.status_code == 200
 
 
 def test_eliminar_incidente():
+    from auth import create_token
+    token = create_token({"usuario_id": "u1", "nombre": "Admin", "rol": "admin"})
     with patch("routes.incidents.get_table", return_value=mock_table):
-        response = client.delete(
-            "/incidents/Bucaramanga%23Norte/2024-01-01T00:00:00%23test-id"
-        )
-        assert response.status_code == 200
+        with patch("routes.incidents._get_incidente_by_id", return_value={"CiudadZona": "Bucaramanga#Norte", "FechaID": "123"}):
+            response = client.delete(
+                "/incidents/test-id",
+                headers={"Authorization": f"Bearer {token}"}
+            )
+            assert response.status_code == 200
